@@ -1,0 +1,9 @@
+{
+  "clientID": "YOUR_CLIENT_ID",
+  "clientSecret": "YOUR_SECRET_KEY",
+  "redirectURL": "http://localhost:8080/oauth/callback",
+  "scopes": [
+    "openid"
+  ],
+  "tenant": "common"
+}
