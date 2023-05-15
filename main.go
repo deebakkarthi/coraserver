@@ -74,7 +74,7 @@ func main() {
 	router := http.NewServeMux()
 
 	router.HandleFunc("/oauth/login", oauthLoginHandler)
-	router.HandleFunc("/oauth/callback", oauthCallbackHandler)
+	router.HandleFunc("/oauth/exchange", oauthExchangeHandler)
 
 	server := &http.Server{Addr: port, Handler: router}
 
@@ -87,16 +87,68 @@ func oauthLoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
 
-func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
+func requestGraphAPI(accessToken string, endpoint string) ([]byte, error) {
+	url := "https://graph.microsoft.com/v1.0/" + endpoint
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+func oauthExchangeHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	// Exchange the authorization code for an access token
 	token, err := oauthConfig.Exchange(r.Context(), code)
 	if err != nil {
 		log.Println("Error while exchanging authorization code", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
 		return
 	}
-	fmt.Fprintln(w, "AccessToken:", token.AccessToken)
-	fmt.Fprintln(w, "TokenType:", token.TokenType)
-	fmt.Fprintln(w, "RefreshToken:", token.RefreshToken)
-	fmt.Fprintln(w, "Expiry:", token.Expiry)
+	userProfileJSON, err := requestGraphAPI(token.AccessToken, "me")
+	if err != nil {
+		log.Println("Error getting user profile", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	userOrgJSON, err := requestGraphAPI(token.AccessToken, "organization")
+	if err != nil {
+		log.Println("Error getting user organization", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	// Set the response headers
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	// Send the JSON response in the response body
+	w.Write(userProfileJSON)
+	w.Write([]byte("\n"))
+	w.Write(userOrgJSON)
 }
