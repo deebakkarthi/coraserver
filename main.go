@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/microsoft"
@@ -83,7 +85,8 @@ func main() {
 }
 
 func oauthLoginHandler(w http.ResponseWriter, r *http.Request) {
-	authURL := oauthConfig.AuthCodeURL("state", oauth2.AccessTypeOnline)
+	state := generateRandomString(16)
+	authURL := oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOnline, oauth2.SetAuthURLParam("prompt", "select_account"))
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
 
@@ -151,4 +154,14 @@ func oauthExchangeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(userProfileJSON)
 	w.Write([]byte("\n"))
 	w.Write(userOrgJSON)
+}
+
+func generateRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	rand.Seed(time.Now().UnixNano())
+	randomString := make([]byte, length)
+	for i := 0; i < length; i++ {
+		randomString[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(randomString)
 }
