@@ -1,3 +1,6 @@
+DROP DATABASE cora;
+CREATE DATABASE cora;
+USE cora;
 CREATE TABLE IF NOT EXISTS slot (
     id INT,
     stime TIME NOT NULL, 
@@ -11,7 +14,7 @@ CREATE TABLE IF NOT EXISTS subject (
 );
 CREATE TABLE IF NOT EXISTS faculty (
     id CHAR(254),
-    name VARCHAR(64) NOT NULL, 
+    name VARCHAR(64) NOT NULL,
     PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS static (
