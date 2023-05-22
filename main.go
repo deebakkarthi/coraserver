@@ -7,8 +7,10 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/deebakkarthi/coraserver/db"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/microsoft"
 )
@@ -77,11 +79,24 @@ func main() {
 
 	router.HandleFunc("/oauth/login", oauthLoginHandler)
 	router.HandleFunc("/oauth/exchange", oauthExchangeHandler)
+	router.HandleFunc("/db/freeclass", freeClassHandler)
+	router.HandleFunc("/db/freeslot", freeSlotHandler)
+	router.HandleFunc("/db/daytimetable", dayTimetableHandler)
 
 	server := &http.Server{Addr: port, Handler: router}
 
 	log.Println("Server starting on port ", port)
 	log.Fatal(server.ListenAndServe())
+}
+
+func generateRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	rand.Seed(time.Now().UnixNano())
+	randomString := make([]byte, length)
+	for i := 0; i < length; i++ {
+		randomString[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(randomString)
 }
 
 func oauthLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -156,12 +171,61 @@ func oauthExchangeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(userOrgJSON)
 }
 
-func generateRandomString(length int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	rand.Seed(time.Now().UnixNano())
-	randomString := make([]byte, length)
-	for i := 0; i < length; i++ {
-		randomString[i] = charset[rand.Intn(len(charset))]
+func freeClassHandler(w http.ResponseWriter, r *http.Request) {
+	slotStr := r.URL.Query().Get("slot")
+	day := r.URL.Query().Get("day")
+	slot, err := strconv.Atoi(slotStr)
+	if err != nil {
+		http.Error(w, "Invalid slot value", http.StatusBadRequest)
+		return
 	}
-	return string(randomString)
+	var classroom []string = db.GetFreeClass(slot, day)
+	// Convert classroom to JSON
+	jsonResponse, err := json.Marshal(classroom)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set the content type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Write the JSON response
+	w.Write(jsonResponse)
+}
+
+func freeSlotHandler(w http.ResponseWriter, r *http.Request) {
+	class := r.URL.Query().Get("class")
+	day := r.URL.Query().Get("day")
+	var slot []int = db.GetFreeSlot(class, day)
+	// Convert classroom to JSON
+	jsonResponse, err := json.Marshal(slot)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set the content type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Write the JSON response
+	w.Write(jsonResponse)
+}
+
+func dayTimetableHandler(w http.ResponseWriter, r *http.Request) {
+	class := r.URL.Query().Get("class")
+	day := r.URL.Query().Get("day")
+	var subject []string = db.GetTimetableByDay(class, day)
+	// Convert classroom to JSON
+	jsonResponse, err := json.Marshal(subject)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set the content type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Write the JSON response
+	w.Write(jsonResponse)
 }
