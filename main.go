@@ -19,8 +19,9 @@ import (
 var oauthConfig *oauth2.Config
 
 const (
-	configFile = "./config.json"
-	port       = ":42069"
+	configFile     = "./config.json"
+	port           = ":42069"
+	organizationID = "00f9cda3-075e-44e5-aa0b-aba3add6539f"
 )
 
 /*
@@ -41,6 +42,75 @@ type oauthJSONRepr struct {
 	RedirectURL  string   `json:"redirectURL"`
 	Scopes       []string `json:"scopes"`
 	Tenant       string   `json:"tenant"`
+}
+
+type graphMe struct {
+	OdataContext      string   `json:"@odata.context"`
+	BusinessPhones    []string `json:"businessPhones"`
+	DisplayName       string   `json:"displayName"`
+	GivenName         string   `json:"givenName"`
+	JobTitle          string   `json:"jobTitle"`
+	Mail              string   `json:"mail"`
+	MobilePhone       string   `json:"mobilePhone"`
+	OfficeLocation    string   `json:"officeLocation"`
+	PreferredLanguage string   `json:"preferredLanguage"`
+	Surname           string   `json:"surname"`
+	UserPrincipalName string   `json:"userPrincipalName"`
+	ID                string   `json:"id"`
+}
+
+type graphOrganization struct {
+	OdataContext string                   `json:"@odata.context"`
+	Value        []graphOrganizationValue `json:"value"`
+}
+
+type graphOrganizationValue struct {
+	ID                                        string   `json:"id"`
+	DeletedDateTime                           string   `json:"deletedDateTime"`
+	BusinessPhones                            []string `json:"businessPhones"`
+	City                                      string   `json:"city"`
+	Country                                   string   `json:"country"`
+	CountryLetterCode                         string   `json:"countryLetterCode"`
+	CreatedDateTime                           string   `json:"createdDateTime"`
+	DefaultUsageLocation                      string   `json:"defaultUsageLocation"`
+	DisplayName                               string   `json:"displayName"`
+	IsMultipleDataLocationsForServicesEnabled string   `json:"isMultipleDataLocationsForServicesEnabled"`
+	MarketingNotificationEmails               []string `json:"marketingNotificationEmails"`
+	OnPremisesLastSyncDateTime                string   `json:"onPremisesLastSyncDateTime"`
+	OnPremisesSyncEnabled                     string   `json:"onPremisesSyncEnabled"`
+	PartnerTenantType                         string   `json:"partnerTenantType"`
+	PostalCode                                string   `json:"postalCode"`
+	PreferredLanguage                         string   `json:"preferredLanguage"`
+	SecurityComplianceNotificationMails       []string `json:"securityComplianceNotificationMails"`
+	SecurityComplianceNotificationPhones      []string `json:"securityComplianceNotificationPhones"`
+	State                                     string   `json:"state"`
+	Street                                    string   `json:"street"`
+	TechnicalNotificationMails                []string `json:"technicalNotificationMails"`
+	TenantType                                string   `json:"tenantType"`
+	DirectorySizeQuota                        struct {
+		Used  int `json:"used"`
+		Total int `json:"total"`
+	} `json:"directorySizeQuota"`
+	OnPremisesSyncStatus []string `json:"onPremisesSyncStatus"`
+	AssignedPlans        []string `json:"assignedPlans"`
+	PrivacyProfile       struct {
+		ContactEmail string `json:"contactEmail"`
+		StatementURL string `json:"statementUrl"`
+	} `json:"privacyProfile"`
+	ProvisionedPlans []string `json:"provisionedPlans"`
+	VerifiedDomains  []struct {
+		Capabilities string `json:"capabilities"`
+		IsDefault    bool   `json:"isDefault"`
+		IsInitial    bool   `json:"isInitial"`
+		Name         string `json:"name"`
+		Type         string `json:"type"`
+	} `json:"verifiedDomains"`
+}
+
+type oauthExchangeResponse struct {
+	Name         string `json:"name"`
+	Mail         string `json:"mail"`
+	Organization string `json:"organization"`
 }
 
 /*
@@ -73,8 +143,6 @@ func init() {
 }
 
 func main() {
-
-	// Rudimentary routing setup
 	router := http.NewServeMux()
 
 	router.HandleFunc("/oauth/login", oauthLoginHandler)
@@ -111,21 +179,17 @@ func requestGraphAPI(accessToken string, endpoint string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/json")
-
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
 	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -136,7 +200,6 @@ func requestGraphAPI(accessToken string, endpoint string) ([]byte, error) {
 
 func oauthExchangeHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
-	// Exchange the authorization code for an access token
 	token, err := oauthConfig.Exchange(r.Context(), code)
 	if err != nil {
 		log.Println("Error while exchanging authorization code", err)
@@ -145,7 +208,7 @@ func oauthExchangeHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	userProfileJSON, err := requestGraphAPI(token.AccessToken, "me")
+	graphMeResponse, err := requestGraphAPI(token.AccessToken, "me")
 	if err != nil {
 		log.Println("Error getting user profile", err)
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -153,7 +216,7 @@ func oauthExchangeHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	userOrgJSON, err := requestGraphAPI(token.AccessToken, "organization")
+	graphOrganizationResponse, err := requestGraphAPI(token.AccessToken, "organization")
 	if err != nil {
 		log.Println("Error getting user organization", err)
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -161,14 +224,33 @@ func oauthExchangeHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	// Set the response headers
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	// Send the JSON response in the response body
-	w.Write(userProfileJSON)
-	w.Write([]byte("\n"))
-	w.Write(userOrgJSON)
+	var organization graphOrganization
+	var profile graphMe
+	json.Unmarshal(graphMeResponse, &profile)
+	json.Unmarshal(graphOrganizationResponse, &organization)
+	if organization.Value[0].ID == organizationID {
+		tmp := oauthExchangeResponse{
+			Name:         profile.GivenName,
+			Mail:         profile.Mail,
+			Organization: organization.Value[0].DisplayName,
+		}
+		response, err := json.Marshal(tmp)
+		if err != nil {
+			log.Println("Error marshalling data", err)
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(response)
+	} else {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("This app is only for members of Amrita Vishwa Vidyapeetham"))
+	}
+	return
 }
 
 func freeClassHandler(w http.ResponseWriter, r *http.Request) {
@@ -180,17 +262,12 @@ func freeClassHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var classroom []string = db.GetFreeClass(slot, day)
-	// Convert classroom to JSON
 	jsonResponse, err := json.Marshal(classroom)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// Set the content type header to application/json
 	w.Header().Set("Content-Type", "application/json")
-
-	// Write the JSON response
 	w.Write(jsonResponse)
 }
 
@@ -198,17 +275,12 @@ func freeSlotHandler(w http.ResponseWriter, r *http.Request) {
 	class := r.URL.Query().Get("class")
 	day := r.URL.Query().Get("day")
 	var slot []int = db.GetFreeSlot(class, day)
-	// Convert classroom to JSON
 	jsonResponse, err := json.Marshal(slot)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// Set the content type header to application/json
 	w.Header().Set("Content-Type", "application/json")
-
-	// Write the JSON response
 	w.Write(jsonResponse)
 }
 
@@ -216,16 +288,11 @@ func dayTimetableHandler(w http.ResponseWriter, r *http.Request) {
 	class := r.URL.Query().Get("class")
 	day := r.URL.Query().Get("day")
 	var subject []string = db.GetTimetableByDay(class, day)
-	// Convert classroom to JSON
 	jsonResponse, err := json.Marshal(subject)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// Set the content type header to application/json
 	w.Header().Set("Content-Type", "application/json")
-
-	// Write the JSON response
 	w.Write(jsonResponse)
 }
