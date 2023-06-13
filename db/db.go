@@ -9,26 +9,31 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func GetFreeClass(slot int, day string) []string {
+func GetFreeClass(slot int, date time.Time) []string {
 	var classroom []string
+	day := strings.ToUpper(date.Weekday().String()[:3])
+	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
 
-	db, err := sql.Open("mysql", "cora:@/cora")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(
-		`SELECT class_id FROM static WHERE
+		`SELECT class_id FROM static s WHERE
         slot_id = ? AND
         day = ? AND
-        subject_id = "FREE"`)
+        subject_id = "FREE" AND
+        NOT EXISTS (SELECT 1 FROM dynamic WHERE
+        slot_id=s.slot_id AND
+    date=? AND class_id=s.class_id)
+        `)
 	if err != nil {
 		panic(err)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(slot, day)
+	rows, err := stmt.Query(slot, day, date)
 	// Process the query results
 	for rows.Next() {
 		var tmp string
@@ -60,14 +65,12 @@ func GetFreeSlot(class string, date time.Time) []int {
 	if err != nil {
 		log.Println(err)
 	}
-	log.Println("Query prepared")
 	defer stmt.Close()
 
 	rows, err := stmt.Query(class, day, date)
 	if err != nil {
 		log.Println(err)
 	}
-	log.Println("Queried")
 	// Process the query results
 	for rows.Next() {
 		var tmp int
@@ -80,24 +83,32 @@ func GetFreeSlot(class string, date time.Time) []int {
 	return slot
 }
 
-func GetTimetableByDay(class string, day string) []string {
+func GetTimetableByDay(class string, date time.Time) []string {
 	var subject []string
-	db, err := sql.Open("mysql", "cora:@/cora")
+	day := strings.ToUpper(date.Weekday().String()[:3])
+	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(
-		`SELECT subject_id FROM static WHERE
-        class_id = ? AND
-        day = ?`)
+	/*
+	   SELECT subject_id FROM (SELECT slot_id, subject_id FROM dynamic WHERE
+	   date="2023-06-14" AND class_id="A104" UNION SELECT slot_id, subject_id
+	   FROM static WHERE day="WED" AND class_id="A104") as c GROUP BY slot_id;
+	*/
+	stmt, err := db.Prepare(`
+    SELECT subject_id FROM
+    (SELECT slot_id, subject_id FROM dynamic WHERE date=? AND class_id=? UNION
+    SELECT slot_id, subject_id FROM static WHERE day=? AND class_id=?) as tmp
+    GROUP BY slot_id;
+    `)
 	if err != nil {
 		panic(err)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(class, day)
+	rows, err := stmt.Query(date, class, day, class)
 	// Process the query results
 	for rows.Next() {
 		var tmp string

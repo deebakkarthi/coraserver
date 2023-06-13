@@ -265,13 +265,17 @@ func oauthExchangeHandler(w http.ResponseWriter, r *http.Request) {
 
 func freeClassHandler(w http.ResponseWriter, r *http.Request) {
 	slotStr := r.URL.Query().Get("slot")
-	day := r.URL.Query().Get("day")
+	date, err := time.Parse("2006-01-02", r.URL.Query().Get("date"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	slot, err := strconv.Atoi(slotStr)
 	if err != nil {
 		http.Error(w, "Invalid slot value", http.StatusBadRequest)
 		return
 	}
-	var classroom []string = db.GetFreeClass(slot, day)
+	var classroom []string = db.GetFreeClass(slot, date)
 	responseJSON, err := json.Marshal(classroom)
 	if err != nil {
 		log.Println("Error marshalling data", err)
@@ -306,8 +310,8 @@ func freeSlotHandler(w http.ResponseWriter, r *http.Request) {
 
 func dayTimetableHandler(w http.ResponseWriter, r *http.Request) {
 	class := r.URL.Query().Get("class")
-	day := r.URL.Query().Get("day")
-	var subject []string = db.GetTimetableByDay(class, day)
+	date, err := time.Parse("2006-01-02", r.URL.Query().Get("date"))
+	var subject []string = db.GetTimetableByDay(class, date)
 	responseJSON, err := json.Marshal(subject)
 	if err != nil {
 		log.Println("Error marshalling data", err)
