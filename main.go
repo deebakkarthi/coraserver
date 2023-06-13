@@ -286,8 +286,12 @@ func freeClassHandler(w http.ResponseWriter, r *http.Request) {
 
 func freeSlotHandler(w http.ResponseWriter, r *http.Request) {
 	class := r.URL.Query().Get("class")
-	day := r.URL.Query().Get("day")
-	var slot []int = db.GetFreeSlot(class, day)
+	date, err := time.Parse("2006-01-02", r.URL.Query().Get("date"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var slot []int = db.GetFreeSlot(class, date)
 	responseJSON, err := json.Marshal(slot)
 	if err != nil {
 		log.Println("Error marshalling data", err)
