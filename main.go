@@ -158,6 +158,8 @@ func main() {
 	router.HandleFunc("/db/getAllSlot", getAllSlotHandler)
 	router.HandleFunc("/db/getAllClass", getAllClassHandler)
 	router.HandleFunc("/db/getAllSubject", getAllSubjectHandler)
+	router.HandleFunc("/db/getBooking", getBookingHandler)
+	router.HandleFunc("/db/cancelBooking", cancelBookingHandler)
 
 	server := &http.Server{Addr: port, Handler: router}
 
@@ -356,6 +358,20 @@ func getAllSubjectHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(responseJSON)
 }
 
+func getBookingHandler(w http.ResponseWriter, r *http.Request) {
+	faculty := r.URL.Query().Get("faculty")
+	var subject []db.BookingRecord = db.GetBooking(faculty)
+	responseJSON, err := json.Marshal(subject)
+	if err != nil {
+		log.Println("Error marshalling data", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(responseJSON)
+}
 
 func bookingHandler(w http.ResponseWriter, r *http.Request) {
 	var response insertResponse
@@ -397,5 +413,25 @@ func bookingHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(responseJSON)
+	return
+}
+
+func cancelBookingHandler(w http.ResponseWriter, r *http.Request) {
+	class := r.URL.Query().Get("class")
+	date, err := time.Parse("2006-01-02", r.URL.Query().Get("date"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	slot, err := strconv.Atoi(r.URL.Query().Get("slot"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = db.CancelBooking(class, date, slot)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	http.Redirect(w, r, "/profile.html", http.StatusFound)
 	return
 }

@@ -24,7 +24,7 @@ func TestGetAllSlot(t *testing.T) {
 
 func TestGetFreeClass(t *testing.T) {
 	result := GetFreeClass(8, "THU")
-	if result == nil {
+	if len(result) == 0 {
 		fmt.Println("PASS")
 	} else {
 		t.Errorf(`GetFreeClass(8, "THU") = %v; want nil`, result)

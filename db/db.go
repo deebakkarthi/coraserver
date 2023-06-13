@@ -184,6 +184,61 @@ func GetAllSubject() []string {
 	return subject
 }
 
+type BookingRecord struct {
+	Class   string    `json:"class"`
+	Date    time.Time `json:"date"`
+	Slot    int       `json:"slot"`
+	Faculty string    `json:"faculty"`
+	Subject string    `json:"subject"`
+}
+
+func CancelBooking(class string, date time.Time, slot int) error {
+	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	defer db.Close()
+	stmt, err := db.Prepare(`DELETE FROM dynamic WHERE class_id=? AND date=? AND slot_id=?`)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(class, date, slot)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func GetBooking(faculty string) []BookingRecord {
+	var booking []BookingRecord
+	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	defer db.Close()
+	stmt, err := db.Prepare(`SELECT * FROM dynamic WHERE faculty_id=?`)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query(faculty)
+	for rows.Next() {
+		var tmp BookingRecord
+		err := rows.Scan(&tmp.Class, &tmp.Date, &tmp.Slot, &tmp.Faculty, &tmp.Subject)
+		if err != nil {
+			panic(err)
+		}
+		booking = append(booking, tmp)
+	}
+	return booking
+}
+
 func Booking(class string, date time.Time, slot int, faculty string, subject string) (int64, error) {
 	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
 	if err != nil {
