@@ -36,6 +36,10 @@ json tag they will be used by the =encoding/json= package to deserialize. So
 whenever you want to deserialize a json file the corresponding struct members
 should always be exported.
 */
+
+type insertResponse struct {
+	Inserted bool `json:"inserted"`
+}
 type oauthJSONRepr struct {
 	ClientID     string   `json:"clientID"`
 	ClientSecret string   `json:"clientSecret"`
@@ -150,6 +154,10 @@ func main() {
 	router.HandleFunc("/db/freeclass", freeClassHandler)
 	router.HandleFunc("/db/freeslot", freeSlotHandler)
 	router.HandleFunc("/db/daytimetable", dayTimetableHandler)
+	router.HandleFunc("/db/booking", bookingHandler)
+	router.HandleFunc("/db/getAllSlot", getAllSlotHandler)
+	router.HandleFunc("/db/getAllClass", getAllClassHandler)
+	router.HandleFunc("/db/getAllSubject", getAllSubjectHandler)
 
 	server := &http.Server{Addr: port, Handler: router}
 
@@ -229,12 +237,12 @@ func oauthExchangeHandler(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(graphMeResponse, &profile)
 	json.Unmarshal(graphOrganizationResponse, &organization)
 	if organization.Value[0].ID == organizationID {
-		tmp := oauthExchangeResponse{
+		response := oauthExchangeResponse{
 			Name:         profile.GivenName,
 			Mail:         profile.Mail,
 			Organization: organization.Value[0].DisplayName,
 		}
-		response, err := json.Marshal(tmp)
+		responseJSON, err := json.Marshal(response)
 		if err != nil {
 			log.Println("Error marshalling data", err)
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -244,7 +252,7 @@ func oauthExchangeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(response)
+		w.Write(responseJSON)
 	} else {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusForbidden)
@@ -262,37 +270,132 @@ func freeClassHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var classroom []string = db.GetFreeClass(slot, day)
-	jsonResponse, err := json.Marshal(classroom)
+	responseJSON, err := json.Marshal(classroom)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println("Error marshalling data", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
+	w.Write(responseJSON)
 }
 
 func freeSlotHandler(w http.ResponseWriter, r *http.Request) {
 	class := r.URL.Query().Get("class")
 	day := r.URL.Query().Get("day")
 	var slot []int = db.GetFreeSlot(class, day)
-	jsonResponse, err := json.Marshal(slot)
+	responseJSON, err := json.Marshal(slot)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println("Error marshalling data", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
+	w.Write(responseJSON)
 }
 
 func dayTimetableHandler(w http.ResponseWriter, r *http.Request) {
 	class := r.URL.Query().Get("class")
 	day := r.URL.Query().Get("day")
 	var subject []string = db.GetTimetableByDay(class, day)
-	jsonResponse, err := json.Marshal(subject)
+	responseJSON, err := json.Marshal(subject)
+	if err != nil {
+		log.Println("Error marshalling data", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(responseJSON)
+}
+
+func getAllSlotHandler(w http.ResponseWriter, r *http.Request) {
+	var slot []int = db.GetAllSlot()
+	responseJSON, err := json.Marshal(slot)
+	if err != nil {
+		log.Println("Error marshalling data", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(responseJSON)
+}
+
+func getAllClassHandler(w http.ResponseWriter, r *http.Request) {
+	var class []string = db.GetAllClass()
+	responseJSON, err := json.Marshal(class)
+	if err != nil {
+		log.Println("Error marshalling data", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(responseJSON)
+}
+
+func getAllSubjectHandler(w http.ResponseWriter, r *http.Request) {
+	var subject []string = db.GetAllSubject()
+	responseJSON, err := json.Marshal(subject)
+	if err != nil {
+		log.Println("Error marshalling data", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(responseJSON)
+}
+
+
+func bookingHandler(w http.ResponseWriter, r *http.Request) {
+	var response insertResponse
+	class := r.URL.Query().Get("class")
+	date, err := time.Parse("2006-01-02", r.URL.Query().Get("date"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	slot, err := strconv.Atoi(r.URL.Query().Get("slot"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	faculty := r.URL.Query().Get("faculty")
+	subject := r.URL.Query().Get("subject")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rowsAffected, err := db.Booking(class, date, slot, faculty, subject)
+	if err != nil {
+		log.Println(err)
+		response.Inserted = false
+	} else {
+		if rowsAffected > 0 {
+			response.Inserted = true
+		} else {
+			response.Inserted = false
+		}
+	}
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		log.Println("Error marshalling data", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
+	w.Write(responseJSON)
+	return
 }
