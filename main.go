@@ -161,6 +161,7 @@ func main() {
 	router.HandleFunc("/db/getBooking", getBookingHandler)
 	router.HandleFunc("/db/cancelBooking", cancelBookingHandler)
 	router.HandleFunc("/db/multiFreeSlot", multiFreeSlotHandler)
+	router.HandleFunc("/db/multiBooking", multiBookingHandler)
 
 	server := &http.Server{Addr: port, Handler: router}
 
@@ -438,6 +439,54 @@ func bookingHandler(w http.ResponseWriter, r *http.Request) {
 		response.Inserted = false
 	} else {
 		if rowsAffected > 0 {
+			response.Inserted = true
+		} else {
+			response.Inserted = false
+		}
+	}
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		log.Println("Error marshalling data", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(responseJSON)
+	return
+}
+
+func multiBookingHandler(w http.ResponseWriter, r *http.Request) {
+	var response insertResponse
+	class := r.URL.Query().Get("class")
+	date, err := time.Parse("2006-01-02", r.URL.Query().Get("date"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	startSlot, err := strconv.Atoi(r.URL.Query().Get("startSlot"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	endSlot, err := strconv.Atoi(r.URL.Query().Get("endSlot"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	faculty := r.URL.Query().Get("faculty")
+	subject := r.URL.Query().Get("subject")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rowsAffected, err := db.MultiBooking(class, date, startSlot, endSlot, faculty, subject)
+	if err != nil {
+		log.Println(err)
+		response.Inserted = false
+	} else {
+		if rowsAffected == int64(endSlot-startSlot+1) {
 			response.Inserted = true
 		} else {
 			response.Inserted = false

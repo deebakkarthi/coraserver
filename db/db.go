@@ -334,3 +334,33 @@ func Booking(class string, date time.Time, slot int, faculty string, subject str
 	rowsAffected, _ := result.RowsAffected()
 	return rowsAffected, nil
 }
+
+func MultiBooking(class string, date time.Time, startSlot int, endSlot int, faculty string, subject string) (int64, error) {
+	var rowsAffected int64
+	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	defer db.Close()
+
+	day := strings.ToUpper(date.Weekday().String()[:3])
+	stmt, err := db.Prepare(`INSERT INTO dynamic SELECT ?, ?, ?, ?, ? FROM
+    dual WHERE (SELECT subject_id FROM static WHERE class_id = ? AND day = ?
+    AND slot_id = ?)="FREE";`)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	defer stmt.Close()
+	for slot := startSlot; slot <= endSlot; slot++ {
+		result, err := stmt.Exec(class, date, slot, faculty, subject, class, day, slot)
+		if err != nil {
+			log.Println(err)
+			return rowsAffected, err
+		}
+		tmp, _ := result.RowsAffected()
+		rowsAffected += tmp
+	}
+	return rowsAffected, nil
+}
