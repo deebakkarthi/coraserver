@@ -160,6 +160,7 @@ func main() {
 	router.HandleFunc("/db/getAllSubject", getAllSubjectHandler)
 	router.HandleFunc("/db/getBooking", getBookingHandler)
 	router.HandleFunc("/db/cancelBooking", cancelBookingHandler)
+	router.HandleFunc("/db/multiFreeSlot", multiFreeSlotHandler)
 
 	server := &http.Server{Addr: port, Handler: router}
 
@@ -296,6 +297,37 @@ func freeSlotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var slot []int = db.GetFreeSlot(class, date)
+	responseJSON, err := json.Marshal(slot)
+	if err != nil {
+		log.Println("Error marshalling data", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(responseJSON)
+}
+
+func multiFreeSlotHandler(w http.ResponseWriter, r *http.Request) {
+	startSlotStr := r.URL.Query().Get("startSlot")
+	endSlotStr := r.URL.Query().Get("endSlot")
+	startSlot, err := strconv.Atoi(startSlotStr)
+	if err != nil {
+		http.Error(w, "Invalid slot value", http.StatusBadRequest)
+		return
+	}
+	endSlot, err := strconv.Atoi(endSlotStr)
+	if err != nil {
+		http.Error(w, "Invalid slot value", http.StatusBadRequest)
+		return
+	}
+	date, err := time.Parse("2006-01-02", r.URL.Query().Get("date"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var slot []string = db.MultiFreeSlot(startSlot, endSlot, date)
 	responseJSON, err := json.Marshal(slot)
 	if err != nil {
 		log.Println("Error marshalling data", err)

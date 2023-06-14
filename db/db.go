@@ -83,6 +83,50 @@ func GetFreeSlot(class string, date time.Time) []int {
 	return slot
 }
 
+func MultiFreeSlot(startSlot int, endSlot int, date time.Time) []string {
+	var slot []string
+	day := strings.ToUpper(date.Weekday().String()[:3])
+	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	if err != nil {
+		log.Println(err)
+		return slot
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(`
+    SELECT class_id FROM (SELECT class_id, COUNT(class_id) as num_free FROM
+    static s WHERE slot_id BETWEEN ? AND ? AND subject_id="FREE" AND day=? AND
+    NOT EXISTS (SELECT 1 FROM dynamic WHERE slot_id=s.slot_id AND date=? AND
+    class_id=s.class_id) GROUP BY class_id) as tmp WHERE num_free=(?-?)+1;
+    `)
+	/*
+	   SELECT class_id FROM (SELECT class_id, COUNT(class_id) as num_free FROM
+	   static s WHERE slot_id BETWEEN 5 AND 8 AND subject_id="FREE" AND
+	   day="TUE" AND NOT EXISTS (SELECT 1 FROM DYNAMIC WHERE slot_id=s.slot_id
+	   AND date="2023-06-13" AND class_id=s.class_id) GROUP BY class_id) as
+	   tmp WHERE num_free=(8-5)+1;
+	*/
+	if err != nil {
+		log.Println(err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(startSlot, endSlot, day, date, endSlot, startSlot)
+	if err != nil {
+		log.Println(err)
+	}
+	// Process the query results
+	for rows.Next() {
+		var tmp string
+		err := rows.Scan(&tmp)
+		if err != nil {
+			log.Println(err)
+		}
+		slot = append(slot, tmp)
+	}
+	return slot
+}
+
 func GetTimetableByDay(class string, date time.Time) []string {
 	var subject []string
 	day := strings.ToUpper(date.Weekday().String()[:3])

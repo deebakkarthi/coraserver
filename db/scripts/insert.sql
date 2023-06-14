@@ -28,6 +28,7 @@ INSERT INTO subject VALUES ("19SSK311", "Soft Skills");
 INSERT INTO subject VALUES ("FREE", "Free Period");
 --Faculty;
 INSERT INTO faculty VALUES ("FREE", "No Faculty");
+INSERT INTO faculty VALUES ("cb.en.u4cse20613@cb.students.amrita.edu", "Deebakkarthi C R");
 INSERT INTO faculty VALUES ("pn_kumar@cb.amrita.edu", "Dr.(Col)P.N.Kumar");
 INSERT INTO faculty VALUES ("a_arun@cb.amrita.edu","Arun.A");
 INSERT INTO faculty VALUES ("b_vidhya@cb.amrita.edu","Dr.Vidhya Balasubramanian");
@@ -262,41 +263,41 @@ INSERT INTO static VALUES ( "C102", "MON", 6, "d_bharathi@cb.amrita.edu", "19CSE
 INSERT INTO static VALUES ( "C102", "MON", 7, "d_bharathi@cb.amrita.edu", "19CSE313");
 INSERT INTO static VALUES ( "C102", "MON", 8,"FREE", "FREE");
 
-INSERT INTO static VALUES ( "C102", "TUE", 1, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "TUE", 2, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "TUE", 3, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "TUE", 4, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "TUE", 5, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "TUE", 6, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "TUE", 7, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "TUE", 8, "v_dayanand@cb.amrita.edu", "19CSE356");
+INSERT INTO static VALUES ( "C102", "TUE", 1, "ba_sabarish@cb.amrita.edu", "19CSE314");
+INSERT INTO static VALUES ( "C102", "TUE", 2, "d_bharathi@cb.amrita.edu", "19CSE313");
+INSERT INTO static VALUES ( "C102", "TUE", 3, "m_neethu@cb.amrita.edu", "19CSE311");
+INSERT INTO static VALUES ( "C102", "TUE", 4, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "TUE", 5, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "TUE", 6, "r_karthi@cb.amrita.edu", "19CSE312");
+INSERT INTO static VALUES ( "C102", "TUE", 7, "r_karthi@cb.amrita.edu", "19CSE312");
+INSERT INTO static VALUES ( "C102", "TUE", 8, "FREE", "FREE");
 
-INSERT INTO static VALUES ( "C102", "WED", 1, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "WED", 2, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "WED", 3, "v_dayanand@cb.amrita.edu", "19CSE356");
+INSERT INTO static VALUES ( "C102", "WED", 1, "m_neethu@cb.amrita.edu", "19CSE311");
+INSERT INTO static VALUES ( "C102", "WED", 2, "ba_sabarish@cb.amrita.edu", "19CSE314");
+INSERT INTO static VALUES ( "C102", "WED", 3, "d_bharathi@cb.amrita.edu", "19CSE313");
 INSERT INTO static VALUES ( "C102", "WED", 4, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "WED", 5, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "WED", 6, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "WED", 7, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "WED", 8, "v_dayanand@cb.amrita.edu", "19CSE356");
+INSERT INTO static VALUES ( "C102", "WED", 5, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "WED", 6, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "WED", 7, "m_pooja@cb.amrita.edu", "19CSE332");
+INSERT INTO static VALUES ( "C102", "WED", 8, "m_pooja@cb.amrita.edu", "19CSE332");
 
-INSERT INTO static VALUES ( "C102", "THU", 1, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "THU", 2, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "THU", 3, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "THU", 4, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "THU", 5, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "THU", 6, "v_dayanand@cb.amrita.edu", "19CSE356");
+INSERT INTO static VALUES ( "C102", "THU", 1, "ba_sabarish@cb.amrita.edu", "19CSE314");
+INSERT INTO static VALUES ( "C102", "THU", 2, "ba_sabarish@cb.amrita.edu", "19CSE314");
+INSERT INTO static VALUES ( "C102", "THU", 3, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "THU", 4, "r_karthi@cb.amrita.edu", "19CSE312");
+INSERT INTO static VALUES ( "C102", "THU", 5, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "THU", 6, "FREE", "FREE");
 INSERT INTO static VALUES ( "C102", "THU", 7, "v_dayanand@cb.amrita.edu", "19CSE356");
 INSERT INTO static VALUES ( "C102", "THU", 8, "v_dayanand@cb.amrita.edu", "19CSE356");
 
-INSERT INTO static VALUES ( "C102", "FRI", 1, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "FRI", 2, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "FRI", 3, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "FRI", 4, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "FRI", 5, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "FRI", 6, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "FRI", 7, "v_dayanand@cb.amrita.edu", "19CSE356");
-INSERT INTO static VALUES ( "C102", "FRI", 8, "v_dayanand@cb.amrita.edu", "19CSE356");
+INSERT INTO static VALUES ( "C102", "FRI", 1, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "FRI", 2, "r_karthi@cb.amrita.edu", "19CSE312");
+INSERT INTO static VALUES ( "C102", "FRI", 3, "m_pooja@cb.amrita.edu", "19CSE332");
+INSERT INTO static VALUES ( "C102", "FRI", 4, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "FRI", 5, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "FRI", 6, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "FRI", 7, "FREE", "FREE");
+INSERT INTO static VALUES ( "C102", "FRI", 8, "FREE", "FREE");
 
 
 --CSEF;
