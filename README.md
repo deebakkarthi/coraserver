@@ -1,5 +1,5 @@
 # coraserver
-Server-side code of CORA
+Welcome to CORA, your university's scheduling companion! Our server-side code powers CORA, providing real-time timetables and free slots. Seamlessly book or cancel appointments, making university life a breeze. With efficiency at its core, CORA simplifies scheduling, ensuring you maximize your time. Dive into the code, and let CORA transform how you manage your university schedule!
 
 ## Requirements
 - Azure Account
