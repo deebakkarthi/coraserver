@@ -1,6 +1,6 @@
-DROP DATABASE cora;
-CREATE DATABASE cora;
-USE cora;
+DROP DATABASE cora_db;
+CREATE DATABASE cora_db;
+USE cora_db;
 CREATE TABLE IF NOT EXISTS slot (
     id INT,
     stime TIME NOT NULL, 

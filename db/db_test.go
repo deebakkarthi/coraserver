@@ -11,7 +11,7 @@ import (
 
 // Using the same conn as prod
 // TODO: Maybe consider using a testing account in the db
-const testDSN = "cora:@/cora?parseTime=true"
+const testDSN = "cora:@/cora_db?parseTime=true"
 
 // setupTestDB creates tables and inserts test data
 func setupTestDB(t *testing.T) *sql.DB {

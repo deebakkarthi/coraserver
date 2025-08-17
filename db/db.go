@@ -6,13 +6,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 )
+
+var cfg, _ = mysql.ParseDSN("cora:@/cora_db?parseTime=true")
 
 func GetFreeClass(slot int, date time.Time) []string {
 	var classroom []string
 	day := strings.ToUpper(date.Weekday().String()[:3])
-	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 
 	if err != nil {
 		log.Fatal(err)
@@ -49,7 +52,7 @@ func GetFreeClass(slot int, date time.Time) []string {
 func GetFreeSlot(class string, date time.Time) []int {
 	var slot []int
 	day := strings.ToUpper(date.Weekday().String()[:3])
-	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Println(err)
 		return slot
@@ -86,7 +89,7 @@ func GetFreeSlot(class string, date time.Time) []int {
 func MultiFreeSlot(startSlot int, endSlot int, date time.Time) []string {
 	var slot []string
 	day := strings.ToUpper(date.Weekday().String()[:3])
-	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Println(err)
 		return slot
@@ -130,7 +133,7 @@ func MultiFreeSlot(startSlot int, endSlot int, date time.Time) []string {
 func GetTimetableByDay(class string, date time.Time) []string {
 	var subject []string
 	day := strings.ToUpper(date.Weekday().String()[:3])
-	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -167,7 +170,7 @@ func GetTimetableByDay(class string, date time.Time) []string {
 
 func GetAllSlot() []int {
 	var slot []int
-	db, err := sql.Open("mysql", "cora:@/cora")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -194,7 +197,7 @@ func GetAllSlot() []int {
 
 func GetAllClass() []string {
 	var class []string
-	db, err := sql.Open("mysql", "cora:@/cora")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -221,7 +224,7 @@ func GetAllClass() []string {
 
 func GetAllSubject() []string {
 	var subject []string
-	db, err := sql.Open("mysql", "cora:@/cora")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -255,7 +258,7 @@ type BookingRecord struct {
 }
 
 func CancelBooking(class string, date time.Time, slot int) error {
-	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -277,7 +280,7 @@ func CancelBooking(class string, date time.Time, slot int) error {
 
 func GetBooking(faculty string) []BookingRecord {
 	var booking []BookingRecord
-	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -302,7 +305,7 @@ func GetBooking(faculty string) []BookingRecord {
 }
 
 func Booking(class string, date time.Time, slot int, faculty string, subject string) (int64, error) {
-	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Println(err)
 		return 0, err
@@ -337,7 +340,7 @@ func Booking(class string, date time.Time, slot int, faculty string, subject str
 
 func MultiBooking(class string, date time.Time, startSlot int, endSlot int, faculty string, subject string) (int64, error) {
 	var rowsAffected int64
-	db, err := sql.Open("mysql", "cora:@/cora?parseTime=true")
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Println(err)
 		return 0, err
