@@ -40,3 +40,5 @@ go mod tidy
 go build
 ./coraserver
 ```
+
+For more information visit my [website](https://www.deebakkarthi.com/20250817t110704-cora_moc/)
